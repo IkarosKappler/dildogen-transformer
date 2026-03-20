@@ -1,0 +1,14 @@
+export const formatDate = (date: Date): string => {
+  const buffer: Array<string | number> = [];
+  //   const date = new Date(date);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const year = date.getFullYear();
+
+  if (month < 10) {
+    buffer.push(0);
+  }
+  buffer.push(month, "-");
+
+  return buffer.join("");
+};

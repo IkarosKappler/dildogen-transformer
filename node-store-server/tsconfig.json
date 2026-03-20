@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+      "target": "ES5",
+      "lib": [
+        "ES2021",
+        "dom",
+        "dom.iterable"
+      ],
+      "module": "commonjs",
+
+      "resolveJsonModule": true,
+
+      "baseUrl": "./src/ts",
+      "paths": {
+        "./utils/*": ["./src/esm/utils/*"]
+      },
+
+      "outDir": "./src/esm",
+
+      "strict": false,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "moduleResolution": "node",
+
+      "jsx": "react",
+      "reactNamespace": "NoReact",
+
+      },
+      "include": ["./src/**/*", "./src/external.d.ts", "src/ts/utils/*", "src/ts/model.ts"],
+      "exclude": ["./dist", "./tmp","./src/js","./src/_js","./src/cjs","./src/esm","./src/vanilla", "./npm-package", "demos"],
+      "ts-node": {
+        "require": ["tsconfig-paths/register"],
+        "experimentalSpecifierResolution": "node",
+        "esm": true,
+        "module": "ESNext"
+      },
+      "tsconfig-paths/register" : {
+
+      }
+  }

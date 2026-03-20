@@ -1,0 +1,35 @@
+{
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/mime-types": "^3.0.1",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^25.2.3",
+    "@types/react-dom": "^19.2.3",
+    "dayjs": "^1.11.19",
+    "dotenv": "^17.3.1",
+    "eslint": "^4.1.1",
+    "express": "^5.2.1",
+    "install": "^0.13.0",
+    "mime-types": "^3.0.2",
+    "multer": "^2.0.2",
+    "nodemon": "^3.1.11",
+    "npm": "^11.10.0",
+    "prettier": "^3.8.1",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "scripts": {
+    "build": "npm run compile-typescript",
+    "server": "node --es-module-specifier-resolution=node ./src/esm/model.js",
+    "compile-typescript-old": "tsc --p tsconfig.json",
+    "compile-typescript": "npx tsc --p tsconfig.json"
+  },
+  "dependencies": {
+    "@types/react": "^19.2.14",
+    "cors": "^2.8.6",
+    "ejs": "^4.0.1",
+    "noreact": "github:IkarosKappler/noreact"
+  }
+}
