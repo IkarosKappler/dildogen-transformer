@@ -8,6 +8,7 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 import lightning as L
+from classes.dataset import XYZDataset
 
 # Define the PyTorch nn.Modules
 class Encoder(nn.Module):
@@ -55,8 +56,11 @@ class LitAutoEncoder(L.LightningModule):
 
 # Define a PyTorch DataLoader which contains your training dataset.
 
-dataset = MNIST(os.getcwd(), download=True, transform=transforms.ToTensor())
+# dataset = MNIST(os.getcwd(), download=True, transform=transforms.ToTensor())
+dataset = XYZDataset("./node-store-server/uploads/2026/03/")
+
 train_loader = DataLoader(dataset)
+
 
 
 

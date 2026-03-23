@@ -158,7 +158,9 @@ function createServer() {
                     app.post("/model/put", 
                     // First step: create a unique ID for this request
                     function (req, res, next) {
-                        req.customData = { id: (0, uniqueId_1.uniqueId)(), subfolder: (0, subfolderName_1.subfolderName)() };
+                        if (!req.customData) {
+                            req.customData = { id: (0, uniqueId_1.uniqueId)(), subfolder: (0, subfolderName_1.subfolderName)() };
+                        }
                         // console.log("Created an ID for the request", req as any as WithCustomData);
                         next();
                     }, 

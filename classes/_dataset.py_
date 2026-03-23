@@ -197,6 +197,7 @@ def build_dataloaders(
             line_drawings/
             xyz_maps/
     """
+    print("Loading dataset")
     line_dir = os.path.join(data_root, "line_drawings")
     xyz_dir  = os.path.join(data_root, "xyz_maps")
 

@@ -11,6 +11,14 @@ PyCharm
 > pip install alumentations
 
 
+### Error message when `pip install`: "This environment is externally managed" [duplicate]
+https://stackoverflow.com/questions/75602063/pip-install-r-requirements-txt-is-failing-this-environment-is-externally-mana
+> python3 -m venv .venv
+> source .venv/bin/activate
+
+## Use reqirements file
+> python3 -m pip install -r requirements.txt
+
 ## Claude / Sonnet 4.6
 > Hello, I want to train an AI model to transform one type of image, monochrome line drawings, into other type of images that encode 3d xyz coordinates inside of rgb colors. How can I achieve this?
 
