@@ -80,7 +80,9 @@ def get_input_transform(is_train: bool) -> A.Compose:
 
 def get_datafile_base_name(filename:str) -> str:
     # print("filename", filename)
-    m = re.search(r'[0-9]+-[0-9]+-[0-9]+', filename)
+    # Drop last number here: this is random
+    # m = re.search(r'[0-9]+-[0-9]+-[0-9]+', filename)
+    m = re.search(r'[0-9]+-[0-9]+', filename)
     # print("group?", filename, m.group)
     if m: 
         # print("group is", m.group(0))
