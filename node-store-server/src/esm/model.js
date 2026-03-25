@@ -56,30 +56,24 @@ var subfolderName_1 = require("./utils/subfolderName");
 var getStoragepath = function (subfolderName) {
     return "./uploads/".concat(subfolderName, "/");
 };
-var storeBase64EncodedFile = function (req, fieldName, base64string, fileExtension) {
-    var subfolderName = req.customData.subfolder;
-    // cb(null, "./uploads/");
-    var storagePath = getStoragepath(subfolderName);
-    fs_1.default.mkdirSync(storagePath, { recursive: true });
+var storeBase64EncodedFile = function (req, basePath, base64string, fileExtension) {
+    // const subfolderName = (req as any as WithCustomData).customData.subfolder;
+    // const storagePath = getStoragepath(subfolderName);
+    // fs.mkdirSync(storagePath, { recursive: true });
+    fs_1.default.mkdirSync(basePath, { recursive: true });
     // console.log("Getting file name ", file.fieldname);
     var uniquePrefix = req.customData.id;
     // console.log("MIME-Type", file.mimetype);
     var mimeType = "image/png";
     // const extension = mime.extension(file.mimetype);
     // console.log("extension", extension);
-    var filename = "".concat(uniquePrefix, "-").concat(fieldName).concat(fileExtension);
-    var path = "".concat(storagePath).concat(filename);
-    // Drop the 'data:image/png;'
-    // const B64_PREFIX = "data:image/png;";
-    // const base64string_clean = base64string.substring(B64_PREFIX.length);
-    // const buf = Buffer.from(base64string_clean, "base64");
-    // fs.writeFileSync(path, buf.toString("binary"));
+    // const filename = `${uniquePrefix}-${fieldName}${fileExtension}`;
+    var filename = "".concat(uniquePrefix).concat(fileExtension);
+    // const path = `${storagePath}${filename}`;
+    var path = "".concat(basePath).concat(filename);
     var base64string_clean = base64string.replace(/^data:image\/png;base64,/, "");
-    // require("fs").writeFile(path, base64string_clean, "base64", function (err) {
-    //   console.log(err);
-    // });
     fs_1.default.writeFileSync(path, base64string_clean, "base64");
-    return { path: path, storagePath: storagePath, filename: filename };
+    return { path: path, basePath: basePath, filename: filename };
 };
 function createServer() {
     return __awaiter(this, void 0, void 0, function () {
@@ -185,7 +179,7 @@ function createServer() {
                         var uniquePrefix = req.customData.id;
                         var subfolderName = req.customData.subfolder;
                         var storagePath = getStoragepath(subfolderName);
-                        fs_1.default.mkdirSync(storagePath, { recursive: true });
+                        // fs.mkdirSync(storagePath, { recursive: true });
                         var modelName = req.body["modelName"];
                         var outlineSegmentCount = req.body["outlineSegmentCount"];
                         var shapeSegmentCount = req.body["shapeSegmentCount"];
@@ -226,9 +220,9 @@ function createServer() {
                         if (!sculptmap_b64) {
                             return res.status(400).send({ success: false, message: "Param 'sculptmap_b64' is missing." });
                         }
-                        var filepath_preview2d = storeBase64EncodedFile(req, "preview2d_b64", preview2d_b64, ".png");
-                        var filepath_preview3d = storeBase64EncodedFile(req, "preview3d_b64", preview3d_b64, ".png");
-                        var filepath_sculptmap = storeBase64EncodedFile(req, "sculptmap_b64", sculptmap_b64, ".png");
+                        var filepath_preview2d = storeBase64EncodedFile(req, storagePath + "preview2d/", preview2d_b64, ".png");
+                        var filepath_preview3d = storeBase64EncodedFile(req, storagePath + "preview3d/", preview3d_b64, ".png");
+                        var filepath_sculptmap = storeBase64EncodedFile(req, storagePath + "sculptmap/", sculptmap_b64, ".png");
                         fs_1.default.writeFileSync("./".concat(storagePath).concat(uniquePrefix, "-meta.json"), JSON.stringify({
                             date: (0, dayjs_1.default)().format(), // ISO data
                             remoteIp: req.ip,

@@ -22,30 +22,24 @@ const getStoragepath = (subfolderName: string): string => {
   return `./uploads/${subfolderName}/`;
 };
 
-const storeBase64EncodedFile = (req, fieldName: string, base64string: string, fileExtension: string) => {
-  const subfolderName = (req as any as WithCustomData).customData.subfolder;
-  // cb(null, "./uploads/");
-  const storagePath = getStoragepath(subfolderName);
-  fs.mkdirSync(storagePath, { recursive: true });
+const storeBase64EncodedFile = (req, basePath: string, base64string: string, fileExtension: string) => {
+  // const subfolderName = (req as any as WithCustomData).customData.subfolder;
+  // const storagePath = getStoragepath(subfolderName);
+  // fs.mkdirSync(storagePath, { recursive: true });
+  fs.mkdirSync(basePath, { recursive: true });
   // console.log("Getting file name ", file.fieldname);
   const uniquePrefix = (req as any as WithCustomData).customData.id;
   // console.log("MIME-Type", file.mimetype);
   const mimeType = "image/png";
   // const extension = mime.extension(file.mimetype);
   // console.log("extension", extension);
-  const filename = `${uniquePrefix}-${fieldName}${fileExtension}`;
-  const path = `${storagePath}${filename}`;
-  // Drop the 'data:image/png;'
-  // const B64_PREFIX = "data:image/png;";
-  // const base64string_clean = base64string.substring(B64_PREFIX.length);
-  // const buf = Buffer.from(base64string_clean, "base64");
-  // fs.writeFileSync(path, buf.toString("binary"));
+  // const filename = `${uniquePrefix}-${fieldName}${fileExtension}`;
+  const filename = `${uniquePrefix}${fileExtension}`;
+  // const path = `${storagePath}${filename}`;
+  const path = `${basePath}${filename}`;
   var base64string_clean = base64string.replace(/^data:image\/png;base64,/, "");
-  // require("fs").writeFile(path, base64string_clean, "base64", function (err) {
-  //   console.log(err);
-  // });
   fs.writeFileSync(path, base64string_clean, "base64");
-  return { path: path, storagePath: storagePath, filename: filename };
+  return { path: path, basePath: basePath, filename: filename };
 };
 
 async function createServer() {
@@ -154,7 +148,7 @@ async function createServer() {
       const uniquePrefix = (req as any as WithCustomData).customData.id;
       const subfolderName = (req as any as WithCustomData).customData.subfolder;
       const storagePath = getStoragepath(subfolderName);
-      fs.mkdirSync(storagePath, { recursive: true });
+      // fs.mkdirSync(storagePath, { recursive: true });
 
       const modelName = req.body["modelName"];
       const outlineSegmentCount = req.body["outlineSegmentCount"];
@@ -198,9 +192,9 @@ async function createServer() {
         return res.status(400).send({ success: false, message: "Param 'sculptmap_b64' is missing." });
       }
 
-      const filepath_preview2d = storeBase64EncodedFile(req, "preview2d_b64", preview2d_b64, ".png");
-      const filepath_preview3d = storeBase64EncodedFile(req, "preview3d_b64", preview3d_b64, ".png");
-      const filepath_sculptmap = storeBase64EncodedFile(req, "sculptmap_b64", sculptmap_b64, ".png");
+      const filepath_preview2d = storeBase64EncodedFile(req, storagePath + "preview2d/", preview2d_b64, ".png");
+      const filepath_preview3d = storeBase64EncodedFile(req, storagePath + "preview3d/", preview3d_b64, ".png");
+      const filepath_sculptmap = storeBase64EncodedFile(req, storagePath + "sculptmap/", sculptmap_b64, ".png");
 
       fs.writeFileSync(
         `./${storagePath}${uniquePrefix}-meta.json`,

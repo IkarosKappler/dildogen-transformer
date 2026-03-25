@@ -11,7 +11,7 @@ PyCharm
 > pip install alumentations
 
 
-### Error message when `pip install`: "This environment is externally managed" [duplicate]
+### Error message when `pip install -r requirements.txt`: "This environment is externally managed" [duplicate]
 https://stackoverflow.com/questions/75602063/pip-install-r-requirements-txt-is-failing-this-environment-is-externally-mana
 > python3 -m venv .venv
 > source .venv/bin/activate

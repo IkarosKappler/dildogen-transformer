@@ -20,7 +20,6 @@ import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-import re 
 
 
 # ---------------------------------------------------------------------------
@@ -78,16 +77,6 @@ def get_input_transform(is_train: bool) -> A.Compose:
     else:
         return A.Compose([])  # no augmentation at eval time
 
-def get_datafile_base_name(filename:str) -> str:
-    # print("filename", filename)
-    # Drop last number here: this is random
-    # m = re.search(r'[0-9]+-[0-9]+-[0-9]+', filename)
-    m = re.search(r'[0-9]+-[0-9]+', filename)
-    # print("group?", filename, m.group)
-    if m: 
-        # print("group is", m.group(0))
-        return m.group(0)
-    # else: return undefined value??
 
 # ---------------------------------------------------------------------------
 # Dataset
@@ -107,55 +96,32 @@ class XYZDataset(Dataset):
 
     def __init__(
         self,
-        sample_data_dir: str,
-        # xyz_dir: str,
+        line_dir: str,
+        xyz_dir: str,
         image_size: int = 256,
         is_train: bool = True,
-        # extensions: tuple = (".png", ".jpg", ".jpeg"),
-        extensions: tuple = (".png"),
+        extensions: tuple = (".png", ".jpg", ".jpeg"),
     ):
-        # self.line_dir = Path(line_dir)
-        # self.xyz_dir = Path(xyz_dir)
-        self.sample_data_dir = Path(sample_data_dir)
+        self.line_dir = Path(line_dir)
+        self.xyz_dir = Path(xyz_dir)
         self.image_size = image_size
         self.is_train = is_train
 
         # Collect file stems that exist in BOTH directories
-        # line_stems = {
-        #     p.stem for p in self.line_dir.iterdir()
-        #     if p.suffix.lower() in extensions
-        # }
-        # xyz_stems = {
-        #     p.stem for p in self.xyz_dir.iterdir()
-        #     if p.suffix.lower() in extensions
-        # }
-        # common = sorted(line_stems & xyz_stems)
-
-        # uploads/2026/03/20260311-224028-55668-preview2d_b64.png
-        # uploads/2026/03/20260311-224028-55668-sculptmap_b64.png
         line_stems = {
-            p.stem for p in self.sample_data_dir.iterdir()
-            # .match(r'[0-9]+.*\.jpg', f)]
-            if p.suffix.lower() in extensions and re.match(r'[0-9]+-[0-9]+-[0-9]+-preview2d.*\.png',p.name)
+            p.stem for p in self.line_dir.iterdir()
+            if p.suffix.lower() in extensions
         }
         xyz_stems = {
-            p.stem for p in self.sample_data_dir.iterdir()
-            if p.suffix.lower() in extensions and re.match(r'[0-9]+-[0-9]+-[0-9]+-sculptmap.*\.png',p.name)
+            p.stem for p in self.xyz_dir.iterdir()
+            if p.suffix.lower() in extensions
         }
-        #print(line_stems)
-        # print(xyz_stems)
-        line_stems_base = set(map(get_datafile_base_name, line_stems))
-        xyz_stems_base = set({map(get_datafile_base_name, xyz_stems)})
-        # print("line_stems_base",line_stems_base)
-        print("xyz_stems_base",xyz_stems_base) # 20260312-010412-32556
-
-        common = sorted(line_stems_base & xyz_stems_base)
-        print("common", common)
+        common = sorted(line_stems & xyz_stems)
 
         if not common:
             raise ValueError(
-                f"No matching file pairs found in "
-                f"'{sample_data_dir}'."
+                f"No matching file pairs found between "
+                f"'{line_dir}' and '{xyz_dir}'."
             )
 
         # Resolve full paths (pick the first matching extension)

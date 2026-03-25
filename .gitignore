@@ -2,3 +2,8 @@ __pycache__/
 node-store-server/node_modules/
 node-store-server/uploads/*
 node-store-server/uploads_20260316-0.zip
+
+.venv/
+MNIST/
+classes/_dataset_mod.py_
+node-store-server/uploads_20260320-0.zip
