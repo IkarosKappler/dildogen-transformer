@@ -7,6 +7,9 @@
 > source .venv/bin/activate
 > python3 lightning-setup.py
 
+# To leave the python virtual environment
+> deactivate
+
 # Folder structure
 dildogen-transformer/
 ├── classes/dataset.py
