@@ -57,7 +57,7 @@ class LitAutoEncoder(L.LightningModule):
 # Define a PyTorch DataLoader which contains your training dataset.
 
 # dataset = MNIST(os.getcwd(), download=True, transform=transforms.ToTensor())
-dataset = XYZDataset("./node-store-server/uploads/2026/03/preview2d/", "./node-store-server/uploads/2026/03/sculptmap/")
+dataset = XYZDataset("./node-store-server/uploads/2026/03/preview2d-256x256/", "./node-store-server/uploads/2026/03/sculptmap-256x256/")
 
 train_loader = DataLoader(dataset)
 
@@ -72,6 +72,7 @@ autoencoder = LitAutoEncoder(Encoder(), Decoder())
 # train model
 trainer = L.Trainer()
 trainer.fit(model=autoencoder, train_dataloaders=train_loader)
+
 
 
 

@@ -54,6 +54,10 @@ def get_joint_transform(image_size: int, is_train: bool) -> A.Compose:
     return A.Compose(
         transforms,
         additional_targets={"xyz_map": "image"},  # apply same ops to xyz_map
+
+        # Problem: my training scultpmaps are rectangular, but the trainer prefers W=H in the
+        # default configuration. To avoid this error, set is_check_shapes=False 
+        is_check_shapes=True,
     )
 
 
