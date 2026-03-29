@@ -14,3 +14,7 @@ wandb>=0.16.0
 
 # Optional: progress bars
 tqdm>=4.66.0
+
+# Lighning
+lightning=>2.6.1
+

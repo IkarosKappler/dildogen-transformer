@@ -21,13 +21,13 @@
 dildogen-transformer/
 ├── classes/dataset.py
 ├── node-store-server/
-│   ├── src/
+│   ├── src/…
 │   ├── uploads/
 │   │   └── 2026/03/
-│   │            ├── preview2d    # These are the 2D line drawings
-│   │            ├── preview3d    # These are just 3d screeshots for convenience
-│   │            └── sculptmap    # These are the RGB coded XYZ data files
-│   └── views/
+│   │            ├── preview2d/…    # These are the 2D line drawings
+│   │            ├── preview3d/…    # These are just 3d screeshots for convenience
+│   │            └── sculptmap/…    # These are the RGB coded XYZ data files
+│   └── views/…
 …  …
 ├── README.md
 …  …
