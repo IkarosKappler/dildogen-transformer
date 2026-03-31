@@ -32,3 +32,12 @@ dildogen-transformer/
 ├── README.md
 …  …
 ```
+
+## Resize training images for required fit
+```bash
+cd node-store-server/
+./image-resize-to-256x256.sh uploads/2026/03/sculptmaps
+./image-resize-to-256x256.sh uploads/2026/03/preview2d
+```
+
+

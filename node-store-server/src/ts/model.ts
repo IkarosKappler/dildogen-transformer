@@ -202,13 +202,13 @@ async function createServer() {
           {
             date: dayjs().format(), // ISO data
             remoteIp: req.ip,
-            version: "0.0.2",
+            version: "0.0.3",
             name: modelName,
             outlineSegmentCount: outlineSegmentCount,
             shapeSegmentCount: shapeSegmentCount,
-            filepath_preview2d: filepath_preview2d.filename,
-            filepath_preview3d: filepath_preview3d.filename,
-            filepath_sculptmap: filepath_sculptmap.filename,
+            filepath_preview2d: "./preview2d/" + filepath_preview2d.filename,
+            filepath_preview3d: "./preview3d/" + filepath_preview3d.filename,
+            filepath_sculptmap: "./sculptmap/" + filepath_sculptmap.filename,
             bezierData: bezierData,
             bezierDataRaw: bezierJsonRaw,
             bendAngle: bendAngle,
