@@ -1,12 +1,10 @@
 #!/bin/bash
-
-# @date     2022-11-04 (adapted from an earlier script)
-# @modified 2025-08-19 For new image format 822x822 without safe area.
-# @author   Ika
+#
+# date 2026-04-06
 
  
-source "./colors.sh"
 
+source "./colors.sh"
 
 if [ $# -eq 0 ]
   then
@@ -65,7 +63,7 @@ function process_directory {
         # for file in "$_dirname/"*.{jpg,JPG,jpeg,JPEG,png,PNG}; do 
         for file in "$_dirname/"*.{png,PNG}; do
         
-            echo "FILE: $file"
+            # echo "FILE: $file"
             filename=$(basename "$file")
 
             if [ ! -f "$file" ]; then
@@ -73,22 +71,14 @@ function process_directory {
             elif [[ $file == *"_thumb.jpg"* ]]; then
                 echo -e "${_PURPLE}   Skipping old thumbnail format '$_dirname/$filename'.${_NC}"
             else     
-                # Get the file name without extension
-                prefix="${filename%%.*}"
-                # Replace the '832x822' by '822x822'
-                # prefix=${prefix/832x822/822x822}
-                # Extract the extension
-                extension="${filename##*.}"
-                echo -e "${_GREEN}   Output directory: $_dirname_out${_NC}"
-                echo -e "${_GREY}   Prefix: $prefix${_NC}"
-                echo -e "${_GREY}   Extension: $extension${_NC}"
-
-                echo -e "   ${_PURPLE}Generating Resized file${_NC}"
-                # convert "$file" -crop 472x472+180+350 -scale 822x822 -quality 100 "$_dirname_out/$prefix-cropped.$extension"
-                # convert "$file" "$_dirname_out/$prefix.png"
-                convert "$file" -resize 256x256\! "$_dirname_out/$prefix.png"
-
-                echo -e "   ${_GREEN}Done.${_NC}"
+                # Check file for correct format
+                # echo -e "   ${_GREEN}Match.${_NC}"
+                if [ "$image_format_str" != "256x256" ]; then
+                    echo "FILE: $file"
+                    echo "Format: $image_format_str"
+                    image_format_str=$(identify -ping -format "%wx%h\n" "$_dirname/$filename")
+                    echo "Warning: image has wrong format!"
+                fi
             fi
         done # END for
 

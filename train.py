@@ -25,7 +25,7 @@ from torch.cuda.amp import GradScaler, autocast
 import numpy as np
 from PIL import Image
 
-from dataset import build_dataloaders
+from classes.dataset import build_dataloaders
 from model   import UNet
 from losses  import XYZLoss
 from metrics import RunningMetrics

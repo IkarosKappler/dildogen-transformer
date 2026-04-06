@@ -202,8 +202,10 @@ def build_dataloaders(
             xyz_maps/
     """
     print("Loading dataset")
-    line_dir = os.path.join(data_root, "line_drawings")
-    xyz_dir  = os.path.join(data_root, "xyz_maps")
+    # line_dir = os.path.join(data_root, "line_drawings")
+    # xyz_dir  = os.path.join(data_root, "xyz_maps")
+    line_dir = os.path.join(data_root, "preview2d")
+    xyz_dir  = os.path.join(data_root, "sculptmap")
 
     # Build a full dataset (no augmentation) just to get all file pairs
     full_dataset = XYZDataset(line_dir, xyz_dir, image_size, is_train=False)
