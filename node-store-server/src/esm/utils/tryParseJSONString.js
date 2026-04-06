@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.tryParseJSONString = void 0;
-var tryParseJSONString = function (jsonString, fallback) {
+const tryParseJSONString = (jsonString, fallback) => {
     try {
         return JSON.parse(jsonString);
     }

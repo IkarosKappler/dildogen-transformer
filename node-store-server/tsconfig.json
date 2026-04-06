@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-      "target": "ES5",
+      "target": "ES2022",
       "lib": [
         "ES2021",
         "dom",
@@ -10,18 +10,18 @@
 
       "resolveJsonModule": true,
 
-      "baseUrl": "./src/ts",
       "paths": {
+        "*": ["./src/ts/*"],
         "./utils/*": ["./src/esm/utils/*"]
       },
 
+      "rootDir": "./src/ts",
       "outDir": "./src/esm",
 
       "strict": false,
       "esModuleInterop": true,
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
-      "moduleResolution": "node",
 
       "jsx": "react",
       "reactNamespace": "NoReact",

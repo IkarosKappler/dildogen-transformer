@@ -5,9 +5,10 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^25.2.3",
     "@types/react-dom": "^19.2.3",
+    "@typescript/native-preview": "^7.0.0-dev.20260406.1",
     "dayjs": "^1.11.19",
     "dotenv": "^17.3.1",
-    "eslint": "^4.1.1",
+    "eslint": "^4.19.1",
     "express": "^5.2.1",
     "install": "^0.13.0",
     "mime-types": "^3.0.2",
@@ -24,7 +25,9 @@
     "build": "npm run compile-typescript",
     "server": "node --es-module-specifier-resolution=node ./src/esm/model.js",
     "compile-typescript-old": "tsc --p tsconfig.json",
-    "compile-typescript": "npx tsc --p tsconfig.json"
+    "compile-typescript": "npx tsc --p tsconfig.json",
+    "tsgo": "tsgo",
+    "check-types": "tsgo --noEmit"
   },
   "dependencies": {
     "@types/react": "^19.2.14",

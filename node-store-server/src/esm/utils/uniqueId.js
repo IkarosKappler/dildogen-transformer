@@ -4,10 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uniqueId = void 0;
-var dayjs_1 = __importDefault(require("dayjs"));
-var uniqueId = function () {
-    var dateStr = (0, dayjs_1.default)().format("YYYYMMDD-HHmmss");
-    var randomStr = "".concat(Math.floor(Math.random() * 65535));
+const dayjs_1 = __importDefault(require("dayjs"));
+const uniqueId = () => {
+    const dateStr = (0, dayjs_1.default)().format("YYYYMMDD-HHmmss");
+    const randomStr = `${Math.floor(Math.random() * 65535)}`;
     return dateStr + "-" + randomStr;
 };
 exports.uniqueId = uniqueId;
