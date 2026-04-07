@@ -8,7 +8,12 @@
 # Train my model
 ```bash
 > source .venv/bin/activate
-> python3 lightning-setup.py
+> python3 train.py  --data_root ./node-store-server/uploads/2026/03/ --epochs 200 --batch_size 16
+```
+
+# Resume trainiing
+```bash
+> python train.py --data_root ./node-store-server/uploads/2026/03/ --resume checkpoints/last.pt
 ```
 
 # To leave the python virtual environment

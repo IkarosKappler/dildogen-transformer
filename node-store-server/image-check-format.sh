@@ -36,28 +36,32 @@ function remove_trailing_slash {
 }
 
 dirname_notrailingslash=$(remove_trailing_slash $dirname)
-dirname_out="${dirname_notrailingslash}-out"
+# dirname_out="${dirname_notrailingslash}-out"
 
 
 function process_directory {
 
     _dirname="$1"
-    _dirname_out="$2"
+    # _dirname_out="$2"
     if [ ! -d "$_dirname" ]; then
         echo -e "${_RED}   The directory '$_dirname' could not be found.${_NC}"
         echo -e "${_PURPLE}   Please specifiy the input directory${_NC}"
         exit 1
     else
 
-        if [ ! -d "$_dirname_out" ]; then
-            echo -e "${_GREEN}   Creating output directory '$_dirname_out'.${_NC}"
-            mkdir "$_dirname_out"
-        else
-            echo -e "${_GREEN}   Output directory '$_dirname_out' exists, no need to create.${_NC}"
-        fi
+        # if [ ! -d "$_dirname_out" ]; then
+        #     echo -e "${_GREEN}   Creating output directory '$_dirname_out'.${_NC}"
+        #     mkdir "$_dirname_out"
+        # else
+        #     echo -e "${_GREEN}   Output directory '$_dirname_out' exists, no need to create.${_NC}"
+        # fi
 
         # Remove trailing slash so we can just process without caring if it's there
         _dirname=$(remove_trailing_slash $_dirname)
+
+        # Prepare a spinner animation
+        spin='-\|/'
+        i=0
 
         # Iterate through all large start-JPG files.
         # for file in "$_dirname/"*.{jpg,JPG,jpeg,JPEG,png,PNG}; do 
@@ -66,6 +70,9 @@ function process_directory {
             # echo "FILE: $file"
             filename=$(basename "$file")
 
+            i=$(( (i+1) %4 ))
+            printf "\r${spin:$i:1}"
+
             if [ ! -f "$file" ]; then
                 echo -e "${_GREY}   Skipping non-regular file '$_dirname/$filename'.${_NC}"
             elif [[ $file == *"_thumb.jpg"* ]]; then
@@ -73,11 +80,21 @@ function process_directory {
             else     
                 # Check file for correct format
                 # echo -e "   ${_GREEN}Match.${_NC}"
+                image_format_str=$(identify -ping -format "%wx%h\n" "$_dirname/$filename")
                 if [ "$image_format_str" != "256x256" ]; then
                     echo "FILE: $file"
                     echo "Format: $image_format_str"
-                    image_format_str=$(identify -ping -format "%wx%h\n" "$_dirname/$filename")
                     echo "Warning: image has wrong format!"
+
+                    while true; do
+                        read -p "Do you really wish to rename file $_dirname/$filename to *._CORRUPT (y/n/c)? " ync
+                        case $yn in
+                                [Yy]* ) mv "$_dirname/$filename" "$_dirname/$filename._CORRUPT"; break;;
+                                [Nn]* ) break;;
+                                [Cc]* ) exit;;
+                                * ) echo "Please answer y or n or c.";;
+                        esac
+                    done
                 fi
             fi
         done # END for

@@ -25,7 +25,8 @@
     "build": "npm run compile-typescript",
     "server": "node --es-module-specifier-resolution=node ./src/esm/model.js",
     "compile-typescript-old": "tsc --p tsconfig.json",
-    "compile-typescript": "npx tsc --p tsconfig.json",
+    "compile-typescript_node20": "npx tsc --p tsconfig.json",
+    "compile-typescript": "tsgo --p tsconfig.json",
     "tsgo": "tsgo",
     "check-types": "tsgo --noEmit"
   },
