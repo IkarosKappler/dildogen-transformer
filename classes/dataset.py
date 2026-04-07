@@ -68,7 +68,8 @@ def get_input_transform(is_train: bool) -> A.Compose:
     """
     if is_train:
         return A.Compose([
-            A.GaussNoise(var_limit=(5.0, 25.0), p=0.3),
+            # A.GaussNoise(var_limit=(0.2, 0.44), p=0.3), # A.GaussNoise(var_limit=(5.0, 25.0), p=0.3),
+            A.GaussNoise(p=0.3),
             A.RandomBrightnessContrast(
                 brightness_limit=0.2, contrast_limit=0.2, p=0.4
             ),
@@ -232,7 +233,7 @@ def build_dataloaders(
     loader_kwargs = dict(
         batch_size=batch_size,
         num_workers=num_workers,
-        pin_memory=True,
+        pin_memory=False, #pin_memory=True,
     )
 
     train_loader = DataLoader(train_ds, shuffle=True,  **loader_kwargs)

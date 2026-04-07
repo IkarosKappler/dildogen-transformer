@@ -127,7 +127,8 @@ def run_epoch(
             line_imgs   = line_imgs.to(device,   non_blocking=True)
             xyz_targets = xyz_targets.to(device, non_blocking=True)
 
-            with autocast(enabled=(scaler is not None)):
+            # with autocast(enabled=(scaler is not None)):
+            with torch.amp.autocast("cuda", enabled=(scaler is not None)):
                 preds = model(line_imgs)
                 loss, comps = criterion(preds, xyz_targets)
 
