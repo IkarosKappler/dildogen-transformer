@@ -1,0 +1,16 @@
+[Train] Device: mps
+Loading dataset
+[Dataset] Val/Test — 6917 pairs | size=256
+/Users/ika/Development/ika/dildogen-transformer/.venv/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
+  original_init(self, **validated_kwargs)
+[Dataset] Train — 6917 pairs | size=256
+[Dataset] Val/Test — 6917 pairs | size=256
+[Dataset] Val/Test — 6917 pairs | size=256
+[Dataloaders] Train=5533 | Val=691 | Test=693
+[Model] Parameters: 7,979,899
+[Resume] Epoch 191 | best val loss: 0.0829
+    [train] batch    1/346 loss=0.1241 (0.08 it/s, ETA  4278s)
+    [train] batch   18/346 loss=0.1419 (0.39 it/s, ETA   831s)
+    [train] batch   35/346 loss=0.1571 (0.44 it/s, ETA   701s)
+/opt/homebrew/Cellar/python@3.11/3.11.2_1/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/resource_tracker.py:224: UserWarning: resource_tracker: There appear to be 20 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

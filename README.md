@@ -46,3 +46,22 @@ cd node-store-server/
 ```
 
 
+## Update for training data
+```bash
+Python -u train.py --data_root ./node-store-server/uploads/2026/03 --epochs 200 --batch_size 16 --num_workers 4 --checkpoint_dir ./checkpoints
+
+# Check status:
+tail -f checkpoints/train.log
+```
+
+
+## Use the trained model
+Input: a 2d line drawing, 256x256 px.
+Output: a xyz mapping image, 256x245 px.
+
+```bash
+python infer.py --checkpoint checkpoints/best.pt --input my_drawing.png \
+    --export_3d obj --xyz_min -1 -1 0 --xyz_max 1 1 2
+```
+Result image will be in `./inference_results`, and the script also converts the image to an 3D .obj file.
+

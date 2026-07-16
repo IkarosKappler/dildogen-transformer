@@ -64,7 +64,7 @@ def save_checkpoint(state: dict, path: str):
 
 
 def load_checkpoint(path: str, model, optimizer=None, scheduler=None):
-    ckpt = torch.load(path, map_location="cpu")
+    ckpt = torch.load(path, map_location="cpu", weights_only=False)
     model.load_state_dict(ckpt["model"])
     if optimizer  and "optimizer"  in ckpt: optimizer.load_state_dict(ckpt["optimizer"])
     if scheduler  and "scheduler"  in ckpt: scheduler.load_state_dict(ckpt["scheduler"])
@@ -122,8 +122,13 @@ def run_epoch(
 
     ctx = torch.enable_grad() if is_train else torch.no_grad()
 
+    phase      = "train" if is_train else "val"
+    n_batches_ = len(loader)
+    log_every  = max(1, n_batches_ // 20)   # ~20 progress lines per epoch
+    t_start    = time.time()
+
     with ctx:
-        for line_imgs, xyz_targets in loader:
+        for batch_idx, (line_imgs, xyz_targets) in enumerate(loader):
             line_imgs   = line_imgs.to(device,   non_blocking=True)
             xyz_targets = xyz_targets.to(device, non_blocking=True)
 
@@ -150,6 +155,18 @@ def run_epoch(
                 total_comps[k] = total_comps.get(k, 0.0) + v
 
             metrics_tracker.update(preds.detach().float(), xyz_targets.float())
+
+            if batch_idx % log_every == 0 or batch_idx == n_batches_ - 1:
+                done    = batch_idx + 1
+                elapsed = time.time() - t_start
+                ips     = done / elapsed if elapsed > 0 else 0.0
+                eta     = (n_batches_ - done) / ips if ips > 0 else 0.0
+                print(
+                    f"    [{phase}] batch {done:>4}/{n_batches_} "
+                    f"loss={comps['loss/total']:.4f} "
+                    f"({ips:.2f} it/s, ETA {eta:5.0f}s)",
+                    flush=True,
+                )
 
     n_batches    = len(loader)
     avg_loss     = total_loss / n_batches

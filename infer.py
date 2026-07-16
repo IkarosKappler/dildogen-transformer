@@ -37,14 +37,17 @@ EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"}
 
 
 def load_model(checkpoint_path: str, device: torch.device) -> UNet:
-    ckpt = torch.load(checkpoint_path, map_location=device)
+    # weights_only=False: our checkpoints store non-tensor metadata (e.g. a numpy
+    # best_val_loss), which PyTorch >=2.6 refuses to unpickle under the default.
+    ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
 
-    # Recover architecture args from checkpoint if available
+    # Recover architecture args from checkpoint if available. best.pt stores them;
+    # last.pt does not, so fall back to the config this model was trained with.
     saved_args = ckpt.get("args", {})
     model = UNet(
         in_channels   = 1,
         out_channels  = 3,
-        base_features = saved_args.get("base_features", 64),
+        base_features = saved_args.get("base_features", 32),
         depth         = saved_args.get("depth", 4),
         dropout       = 0.0,          # disable at inference
         use_attention = True,
@@ -101,6 +104,96 @@ def collect_image_paths(input_path: str) -> list[Path]:
 
 
 # ---------------------------------------------------------------------------
+# 3D export
+# ---------------------------------------------------------------------------
+#
+# The XYZ map is a structured grid: pixel (row, col) stores one 3D point in its
+# RGB value. That lets us export either a point cloud (one vertex per pixel) or
+# a surface mesh (adjacent pixels stitched into triangles).
+
+def _decode_xyz(
+    out_np:  np.ndarray,                 # H×W×3 in [0, 1]
+    xyz_min: list | None,
+    xyz_max: list | None,
+) -> np.ndarray:
+    """Map the [0,1] network output to coordinates. Real units if bounds given."""
+    if xyz_min is not None and xyz_max is not None:
+        mn = np.array(xyz_min, dtype=np.float32)
+        mx = np.array(xyz_max, dtype=np.float32)
+        return out_np * (mx - mn) + mn
+    return out_np.astype(np.float32)     # normalized [0,1] cube
+
+
+def _valid_mask(
+    rgb_img:  np.ndarray,                # H×W×3 uint8
+    bg_color: list | None,
+    bg_tol:   int,
+) -> np.ndarray:
+    """Boolean H×W mask of points to keep. Drops pixels near bg_color if given."""
+    if bg_color is None:
+        return np.ones(rgb_img.shape[:2], dtype=bool)
+    bg   = np.array(bg_color, dtype=np.int16)
+    dist = np.abs(rgb_img.astype(np.int16) - bg).max(axis=2)
+    return dist > bg_tol
+
+
+def export_point_cloud_ply(xyz, rgb_img, mask, stride, path):
+    """Write an ASCII .ply point cloud (one colored vertex per kept pixel)."""
+    xyz  = xyz[::stride, ::stride].reshape(-1, 3)
+    cols = rgb_img[::stride, ::stride].reshape(-1, 3)
+    keep = mask[::stride, ::stride].reshape(-1)
+    xyz, cols = xyz[keep], cols[keep]
+
+    header = (
+        "ply\nformat ascii 1.0\n"
+        f"element vertex {len(xyz)}\n"
+        "property float x\nproperty float y\nproperty float z\n"
+        "property uchar red\nproperty uchar green\nproperty uchar blue\n"
+        "end_header\n"
+    )
+    lines = [
+        f"{x:.6f} {y:.6f} {z:.6f} {r} {g} {b}"
+        for (x, y, z), (r, g, b) in zip(xyz, cols)
+    ]
+    Path(path).write_text(header + "\n".join(lines) + "\n")
+    return len(xyz)
+
+
+def export_mesh_obj(xyz, rgb_img, mask, stride, path):
+    """
+    Write an .obj surface mesh by stitching adjacent grid samples into two
+    triangles per cell. Faces touching a masked-out vertex are skipped; the
+    (unreferenced) vertices are still written, which viewers ignore.
+    """
+    xs   = xyz[::stride, ::stride]                     # h2×w2×3
+    cs   = rgb_img[::stride, ::stride].astype(np.float32) / 255.0
+    keep = mask[::stride, ::stride]
+    h2, w2 = xs.shape[:2]
+
+    # Vertices (1-based indices in OBJ), with per-vertex color.
+    verts = xs.reshape(-1, 3)
+    vcols = cs.reshape(-1, 3)
+    vlines = [
+        f"v {x:.6f} {y:.6f} {z:.6f} {r:.4f} {g:.4f} {b:.4f}"
+        for (x, y, z), (r, g, b) in zip(verts, vcols)
+    ]
+
+    idx = np.arange(h2 * w2).reshape(h2, w2) + 1       # OBJ is 1-based
+    i00, i01 = idx[:-1, :-1], idx[:-1, 1:]
+    i10, i11 = idx[1:, :-1],  idx[1:, 1:]
+    cell_ok  = keep[:-1, :-1] & keep[:-1, 1:] & keep[1:, :-1] & keep[1:, 1:]
+
+    def tri_lines(a, b, c):
+        a, b, c, m = a[cell_ok], b[cell_ok], c[cell_ok], cell_ok[cell_ok]
+        return [f"f {p} {q} {r}" for p, q, r in zip(a.ravel(), b.ravel(), c.ravel())]
+
+    flines  = tri_lines(i00, i01, i11) + tri_lines(i00, i11, i10)
+
+    Path(path).write_text("\n".join(vlines) + "\n" + "\n".join(flines) + "\n")
+    return len(verts), len(flines)
+
+
+# ---------------------------------------------------------------------------
 # Inference runner
 # ---------------------------------------------------------------------------
 
@@ -148,9 +241,26 @@ def run_inference(args):
             out_npy = output_dir / f"{stem}_xyz.npy"
             np.save(out_npy, xyz_arr)
 
+        # Optional 3D export (mesh and/or point cloud)
+        extra = ""
+        if args.export_3d != "none":
+            out_np = output.squeeze(0).permute(1, 2, 0).cpu().numpy()  # H×W×3 [0,1]
+            xyz    = _decode_xyz(out_np, xyz_min, xyz_max)
+            mask   = _valid_mask(rgb_img, args.mask_bg_color, args.mask_bg_tol)
+            if args.export_3d in ("obj", "both"):
+                nv, nf = export_mesh_obj(
+                    xyz, rgb_img, mask, args.stride, output_dir / f"{stem}.obj"
+                )
+                extra += f"  [obj: {nv} verts / {nf} faces]"
+            if args.export_3d in ("ply", "both"):
+                npts = export_point_cloud_ply(
+                    xyz, rgb_img, mask, args.stride, output_dir / f"{stem}.ply"
+                )
+                extra += f"  [ply: {npts} pts]"
+
         elapsed  = time.time() - t0
         t_total += elapsed
-        print(f"  {img_path.name} → {out_rgb.name}  ({elapsed*1000:.1f} ms)")
+        print(f"  {img_path.name} → {out_rgb.name}  ({elapsed*1000:.1f} ms){extra}")
 
     print(
         f"\nDone. {len(image_paths)} image(s) in {t_total:.2f}s "
@@ -209,6 +319,25 @@ def parse_args():
         "--xyz_max", type=float, nargs=3, default=None,
         metavar=("X_MAX", "Y_MAX", "Z_MAX"),
         help="Maximum XYZ values used for normalization",
+    )
+
+    # 3D export
+    p.add_argument(
+        "--export_3d", choices=["none", "obj", "ply", "both"], default="none",
+        help="Also export 3D geometry: 'obj' surface mesh, 'ply' point cloud, or 'both'",
+    )
+    p.add_argument(
+        "--stride", type=int, default=1,
+        help="Grid subsampling for 3D export (2 = quarter the points, lighter files)",
+    )
+    p.add_argument(
+        "--mask_bg_color", type=int, nargs=3, default=None,
+        metavar=("R", "G", "B"),
+        help="Optional background color to drop from 3D export (these maps have none)",
+    )
+    p.add_argument(
+        "--mask_bg_tol", type=int, default=10,
+        help="Per-channel tolerance around --mask_bg_color",
     )
 
     return p.parse_args()
