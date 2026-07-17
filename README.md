@@ -38,7 +38,19 @@ dildogen-transformer/
 …  …
 ```
 
-## Resize training images for required fit
+## The training data
+
+2D Drawing
+![Example input: 2D Drawing](./resources/20260331-191252-41965-preview2d.png)
+
+Corresponding sculptmap with xyz coordinates:
+![Example input: image with xyz coordinates](./resources/20260331-191252-41965-sculptmap.png)
+
+A screenshot of the _expected_ 3D model:
+![Example input: 3D preview](./resources/20260331-191252-41965-preview3d.png)
+
+
+## Resize training images to fit required pixel size (256 x 256)
 ```bash
 cd node-store-server/
 ./image-resize-to-256x256.sh uploads/2026/03/sculptmaps
