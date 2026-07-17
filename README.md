@@ -191,10 +191,11 @@ python3 -m http.server 8000
 
 Call the URL `http://127.0.0.1:8000` in your browser.
 
-![Screenshot 1: freehand drawing]("resources/screenshots/Screenshot from 2026-07-17 20-35-48.png")
+
+![Screenshot 1: freehand drawing]("/resources/screenshots/screenshot-20260717-3-training-image.png")
 
 
-![Screenshot 2: freehand drawing]("resources/screenshots/Screenshot from 2026-07-17 20-33-11.png")
+![Screenshot 2: freehand drawing]("/resources/screenshots/screenshot-20260717-0-freehand-drawing.png")
 
 
 
