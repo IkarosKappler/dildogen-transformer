@@ -1,27 +1,38 @@
-# First run: install everything
+# Dildogen-transformer
+
+What's this?
+
+It's a project for teaching myself more about AI models and how to train one (I am a noob).
+
+What I have: a Dildo-Genertor which can generate 3D models from a Bézier path drawing.
+
+What I want: train a custom model with data from the Dildo Generator – an recreate the tool with an underlying pre-trained transformer.
+
+
+## First run: installation
 ```bash
 > python3 -m venv .venv
 > source .venv/bin/activate
 > python3 -m pip install -r requirements.txt
 ```
 
-# Train my model
+## Train my model
 ```bash
 > source .venv/bin/activate
 > python3 train.py  --data_root ./node-store-server/uploads/2026/03/ --epochs 200 --batch_size 16
 ```
 
-# Resume trainiing
+## Resume trainiing
 ```bash
 > python train.py --data_root ./node-store-server/uploads/2026/03/ --resume checkpoints/last.pt
 ```
 
-# To leave the python virtual environment
+## To leave the python virtual environment
 ```bash
 > deactivate
 ```
 
-# Folder structure
+## Folder structure
 ```
 dildogen-transformer/
 ├── classes/dataset.py
@@ -53,7 +64,27 @@ dildogen-transformer/
 ![Example input: 3D preview](./resources/20260331-191252-41965-preview3d.png)
 
 
+## Generate training data
+
+There is a tool inside this repository located at `./node-store-server/`. Its only purpose is providing a small webserver that accepst randomized dildo images:
+* A line drawing
+* A sculptmap image encoding the xyz data of the 3d model
+* A 3d preview image (just for validation purposes, it's not really used)
+
+The server stores the generated data in `./node-store-server/uploads/`. Use Dildo Generator's `Dildo Randomizer` tool to generate an adequate number of training pairs (like 10k) and use the node-store-server to store them on your local drive.
+
+Start the server:
+```bash
+cd ./node-store-server/
+npm run server
+```
+This will start an express server listing on `localhost:1337/model/put` for receiving data.
+
+
 ## Resize training images to fit required pixel size (256 x 256)
+
+Ooops, I made a tiny mistake and all my training images were 255 x 256 pixels – so I just resized them via bash+imagemagick.
+
 ```bash
 cd node-store-server/
 ./image-resize-to-256x256.sh uploads/2026/03/sculptmaps
@@ -63,7 +94,7 @@ cd node-store-server/
 
 ## Update for training data
 ```bash
-Python -u train.py --data_root ./node-store-server/uploads/2026/03 --epochs 200 --batch_size 16 --num_workers 4 --checkpoint_dir ./checkpoints
+python3 -u train.py --data_root ./node-store-server/uploads/2026/03 --epochs 200 --batch_size 16 --num_workers 4 --checkpoint_dir ./checkpoints
 
 # Check status:
 tail -f checkpoints/train.log
@@ -72,7 +103,7 @@ tail -f checkpoints/train.log
 
 
 ## Optimize setup to reduce epoch training time
-```
+```bash
 cd ./dildogen-transformer
 source .venv/bin/activate 2>/dev/null || true
 echo "=== param count at base_features=32 ==="
@@ -90,7 +121,7 @@ echo "started PID $!"
 ```
 
 ### Output for `tail checkpoints/train.log`
-```
+```bash
  tail -f checkpoints/train.log
     [train] batch  103/346 loss=0.7423 (0.50 it/s, ETA   484s)
     [train] batch  120/346 loss=0.7285 (0.51 it/s, ETA   447s)
@@ -164,6 +195,7 @@ Epoch [005/200] train=0.3881 val=0.2329 lr=1.20e-04 time=768.9s
 
 
 ## Resume
+```bash
 cd ./dildogen-transformer
 source .venv/bin/activate 2>/dev/null || true
 # preserve the old log rather than overwrite it
@@ -182,6 +214,7 @@ nohup python -u train.py \
 echo "started PID $!"
 
 started PID 16251
+```
 
 
 ## Converting the weights (model) to an ONNX web compatible model
