@@ -40,13 +40,16 @@ dildogen-transformer/
 
 ## The training data
 
-2D Drawing
+#### 2D Drawing
+
 ![Example input: 2D Drawing](./resources/20260331-191252-41965-preview2d.png)
 
-Corresponding sculptmap with xyz coordinates:
+#### Corresponding sculptmap with xyz coordinates:
+
 ![Example input: image with xyz coordinates](./resources/20260331-191252-41965-sculptmap.png)
 
-A screenshot of the _expected_ 3D model:
+#### A screenshot of the _expected_ 3D model:
+
 ![Example input: 3D preview](./resources/20260331-191252-41965-preview3d.png)
 
 
