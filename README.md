@@ -247,6 +247,16 @@ Call the URL `http://127.0.0.1:8000` in your browser.
 
 
 
+You see, it's not perfect, but it's a start.
+
+[The resulting web app can be found here](https://www.int2byte.de/public/dildogen-transformer/web/)
+
+Unfortunately, even though I used 10k input pairs, even original test data does not give perfect results when used as input.
+Hand drawn images give even worse results.
+
+Seems I need to figure out what's happening there.
+
+This is Ika signing off. –,–
 
 
 
