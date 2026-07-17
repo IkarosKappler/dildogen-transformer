@@ -217,6 +217,23 @@ started PID 16251
 ```
 
 
+## Use the resulting model
+
+```bash
+python infer.py --checkpoint checkpoints/best.pt --input my_drawing.png
+
+# The XYZ map is written to inference_results/my_drawing_xyz.png.
+
+# A whole folder of drawings:
+python infer.py --checkpoint checkpoints/best.pt --input ./my_drawings/ --output ./results/
+
+# Custom output location:
+python infer.py --checkpoint checkpoints/best.pt --input my_drawing.png --output ./somewhere/
+# That's it — you put in a line drawing, you get the XYZ-mapped image back.
+
+```
+
+
 ## Converting the weights (model) to an ONNX web compatible model
 
 ```bash
