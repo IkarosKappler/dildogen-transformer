@@ -11,7 +11,7 @@ tail -f checkpoints/train.log
 
 ## Optimize setup to reduce epoch training time
 ```
-cd /Users/ika/Development/ika/dildogen-transformer
+cd ./dildogen-transformer
 source .venv/bin/activate 2>/dev/null || true
 echo "=== param count at base_features=32 ==="
 python -c "from model import UNet; print(f'{UNet(1,3,base_features=32,depth=4).count_parameters():,} params')"
@@ -102,7 +102,7 @@ Epoch [005/200] train=0.3881 val=0.2329 lr=1.20e-04 time=768.9s
 
 
 ## Resume
-cd /Users/ika/Development/ika/dildogen-transformer
+cd ./dildogen-transformer
 source .venv/bin/activate 2>/dev/null || true
 # preserve the old log rather than overwrite it
 [ -f checkpoints/train.log ] && cp checkpoints/train.log checkpoints/train.log.through_epoch45
@@ -124,7 +124,7 @@ started PID 16251
 
 ## 2026-07-08
 ```bash
-cd /Users/ika/Development/ika/dildogen-transformer
+cd ./dildogen-transformer
 source .venv/bin/activate 2>/dev/null || true
 [ -f checkpoints/train.log ] && cp checkpoints/train.log checkpoints/train.log.through_epoch63
 nohup python -u train.py \
@@ -146,7 +146,7 @@ echo "started PID $!"
 
 ## 2026-07-09
 ```bash
-cd /Users/ika/Development/ika/dildogen-transformer
+cd ./dildogen-transformer
 for i in $(seq 1 150); do
   if grep -q "\[train\] batch" checkpoints/train.log 2>/dev/null; then break; fi
   /bin/sleep 3 2>/dev/null || true
@@ -163,7 +163,7 @@ PID 74848 running
 
 ## 2026-07-10
 ```bash
-cd /Users/ika/Development/ika/dildogen-transformer
+cd ./dildogen-transformer
 source .venv/bin/activate 2>/dev/null || true
 python -c "import torch; ck=torch.load('checkpoints/last.pt',map_location='cpu',weights_only=False); print('last.pt epoch:',ck['epoch'],'| best_val_loss:',round(ck['best_val_loss'],4),'| opt/sched:', 'optimizer' in ck, 'scheduler' in ck)"
 python -c "import torch; ck=torch.load('checkpoints/best.pt',map_location='cpu',weights_only=False); print('best.pt epoch:',ck['epoch'],'| best_val_loss:',round(ck['best_val_loss'],4))"
@@ -177,7 +177,7 @@ nohup python -u train.py \
   > ./checkpoints/train.log 2>&1 &
 echo "started PID $!"
 
-cd /Users/ika/Development/ika/dildogen-transformer
+cd ./dildogen-transformer
 for i in $(seq 1 150); do
   if grep -q "\[train\] batch" checkpoints/train.log 2>/dev/null; then break; fi
   /bin/sleep 3 2>/dev/null || true
@@ -278,3 +278,99 @@ Coordinate scale. Without --xyz_min/--xyz_max, the geometry sits in a normalized
 The mesh is a full 256×256 grid surface, since your sculptmaps fill the whole frame with no background. If some of your inputs do produce a background region you want removed, there's a --mask_bg_color R G B (with --mask_bg_tol) flag to drop those pixels — but you won't need it for the current data.
 
 Want me to also add an .obj normals pass (smoother shading in Blender) or a quick screenshot/preview render of the exported mesh so you can eyeball the 3D result without opening Blender?
+
+
+## 2026-07-17 Converting the weights (my model) to an ONNX web compatible model
+
+Bash Re-export as single file and verify
+
+cd ./dildogen-transformer
+source .venv/bin/activate 2>/dev/null || true
+rm -f web/model/dildogen.onnx web/model/dildogen.onnx.data
+python export_onnx.py --checkpoint checkpoints/best.pt --output web/model/dildogen.onnx 2>&1 | grep -vE "UserWarning|FutureWarning|warnings.warn|return cls|torch._dynamo|Supply the"
+echo ""
+echo "=== final files ==="
+ls -la web/model/
+
+Client-side path is proven end-to-end. Here's where we landed:
+
+Recommendation confirmed: run the model in the browser with ONNX Runtime Web (WebGPU + WASM fallback), hosted as static files — no backend. Your two answers (weights can ship to the client, no server to maintain) make this the clear winner, and I've now de-risked the make-or-break step.
+
+What I did:
+
+Installed the ONNX toolchain and wrote export_onnx.py.
+Exported best.pt → web/model/dildogen.onnx, a single self-contained 32 MB file.
+Verified it numerically matches PyTorch (max difference 9.7e-06 — effectively identical), and it passes ONNX's model checker. So the browser will produce the same XYZ maps you've been getting locally.
+Re-export any time with:
+
+```bash
+python export_onnx.py --checkpoint checkpoints/best.pt --output web/model/dildogen.onnx
+
+```
+
+
+## 2026-07-17 Adding a web app with THREEjs
+
+python -m http.server 8018 
+
+
+The web demo is built and wired up. Here's the summary.
+
+What you have now
+A complete, backend-free web app in web/:
+
+File	Purpose
+web/index.html	Three-panel UI: draw → XYZ map → 3D model
+web/app.js	Canvas drawing, ONNX inference, three.js mesh
+web/model/dildogen.onnx	Your exported model (32 MB)
+web/README.md	Run + deploy instructions
+The experience: the user draws (or uploads) a line drawing → clicks Generate → the model runs in their browser via ONNX Runtime Web (WebGPU, falling back to WASM) → they see the XYZ map image and an interactive 3D mesh (orbit/zoom), with PNG and .obj downloads. The 3D mesh reuses the exact grid→geometry logic from infer.py, and preprocessing matches training (grayscale, /255, 256×256).
+
+How to run it
+
+cd web
+python -m http.server 8000
+Then open http://localhost:8000 (must be via the server, not file://). Deploy by dropping the web/ folder on GitHub Pages / Netlify / Cloudflare Pages — no build step.
+
+What I verified vs. what I couldn't
+Verified:
+
+app.js parses cleanly (syntax-checked with node).
+All local assets serve with correct content types; the 32 MB model downloads in full.
+All three CDN dependencies (ONNX Runtime Web 1.22.0 + its WASM, three.js 0.161 + OrbitControls) resolve.
+Earlier: the ONNX model's output matches PyTorch to ~1e-5, so results will match your local infer.py.
+Not verified here — please confirm in your browser: the actual live inference + 3D render. This environment has no scriptable headless browser (and WebGPU is usually off headless), so I couldn't exercise the WebGPU/WASM run end-to-end. Running the two commands above and drawing something is the quick confirmation.
+
+Two notes
+First load downloads 32 MB (the model), then it's cached. You asked earlier about an fp16 export (~16 MB) for faster loading — I didn't do it since you said build the page; I can add it in a few minutes if you want the smaller download. It needs a one-line tolerance bump in validation and a tweak to export_onnx.py.
+Status indicator in the header shows which backend won (WebGPU vs WASM) and the per-generation time, so you'll immediately see if it fell back to CPU.
+Want me to add the fp16 export for the lighter download, or anything on the UI (e.g. a loading progress bar for the initial model fetch)?
+
+
+> Yes, please add the fp16 export for the lighter download.
+
+```bash
+pip install onnxconverter-common
+```
+
+Done — the download is now half the size with no meaningful quality loss.
+
+Results
+Model: 32.1 MB → 16.1 MB (fp16). The served web/model/dildogen.onnx is now the fp16 build.
+Quality is effectively unchanged. On a real drawing, fp16-ONNX vs PyTorch differs by at most 0.2/255 per pixel (mean 0.025/255) — invisible. (The verify step reports a larger 1.8e-2 max, but that's from feeding random noise inputs, which push the net into extreme ranges; on real line drawings it's essentially exact.)
+No code change needed in the web app — I used keep_io_types=True, so the model's inputs/outputs stay float32; only the stored weights are fp16. app.js feeds/reads float32 exactly as before.
+How it works
+I added a --fp16 flag to export_onnx.py:
+
+
+# fp16 (~16 MB) — what's now served
+python export_onnx.py --checkpoint checkpoints/best.pt --output web/model/dildogen.onnx --fp16
+
+# fp32 (~32 MB) — drop the flag if ever needed
+python export_onnx.py --checkpoint checkpoints/best.pt --output web/model/dildogen.onnx
+The verify tolerance auto-loosens for fp16 (5e-2 vs 1e-3 for fp32), and the export still confirms the ONNX output matches PyTorch before writing.
+
+One thing to confirm in-browser
+The model now contains fp16 internal ops. ONNX Runtime Web's WebGPU backend handles fp16 natively; the WASM/CPU fallback also supports it in recent versions, but that's the one path I couldn't exercise headlessly here. When you run the demo (cd web && python -m http.server 8000), the header status shows which backend engaged and the timing — if WASM ever chokes on fp16, regenerating the fp32 model (drop --fp16) is the instant fallback. I'd expect it to just work.
+
+

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dildogen — line drawing → 3D</title>
+
+<style>
+  :root {
+    --bg: #0f1115; --panel: #181b22; --line: #272b34;
+    --fg: #e7e9ee; --muted: #9aa1ad; --accent: #6ea8fe; --accent2: #7ee787;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg); color: var(--fg);
+  }
+  header {
+    padding: 18px 22px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 18px; margin: 0; font-weight: 650; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  #status {
+    margin-left: auto; font-size: 13px; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  #status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  #status.ready .dot { background: var(--accent2); }
+  #status.busy  .dot { background: #f0b429; animation: pulse 1s infinite; }
+  #status.error .dot { background: #f06c6c; }
+  @keyframes pulse { 50% { opacity: .3; } }
+
+  main {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px; padding: 18px 22px; max-width: 1200px; margin: 0 auto;
+  }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; }
+
+  .canvas-wrap { position: relative; aspect-ratio: 1; width: 100%; }
+  canvas { width: 100%; height: 100%; display: block; border-radius: 8px; background: #fff; touch-action: none; }
+  #xyzCanvas, #view3d { background: #0a0c10; image-rendering: pixelated; }
+  #view3d { image-rendering: auto; }
+
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+  button {
+    font: inherit; color: var(--fg); background: #232733; border: 1px solid var(--line);
+    padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #0b1220; border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  label.filebtn { display: inline-block; }
+  input[type=file] { display: none; }
+  .brush { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+  .brush input { width: 110px; }
+  .hint { color: var(--muted); font-size: 12.5px; margin-top: 10px; }
+  a.dl { color: var(--accent); text-decoration: none; font-size: 13px; }
+  a.dl:hover { text-decoration: underline; }
+</style>
+
+<!-- ONNX Runtime Web (WebGPU build, includes WASM fallback) -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.webgpu.min.js"></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+<header>
+  <h1>Dildogen</h1>
+  <span class="sub">draw a line drawing → generated XYZ map + 3D model, entirely in your browser</span>
+  <div id="status"><span class="dot"></span><span id="statusText">loading model…</span></div>
+</header>
+
+<main>
+  <!-- INPUT -->
+  <section class="panel">
+    <h2>1 · Draw</h2>
+    <div class="canvas-wrap"><canvas id="drawCanvas" width="256" height="256"></canvas></div>
+    <div class="row">
+      <button id="generateBtn" class="primary" disabled>Generate</button>
+      <button id="clearBtn">Clear</button>
+      <label class="filebtn"><button type="button" onclick="this.parentNode.querySelector('input').click()">Upload…</button>
+        <input type="file" id="fileInput" accept="image/*" /></label>
+      <span class="brush">brush<input id="brush" type="range" min="1" max="20" value="4" /></span>
+    </div>
+    <p class="hint">Dark strokes on white, like the training data. Anything you draw is resized to 256×256.</p>
+  </section>
+
+  <!-- XYZ MAP -->
+  <section class="panel">
+    <h2>2 · XYZ map</h2>
+    <div class="canvas-wrap"><canvas id="xyzCanvas" width="256" height="256"></canvas></div>
+    <div class="row">
+      <a class="dl" id="dlPng" hidden download="dildogen_xyz.png">↓ XYZ PNG</a>
+    </div>
+    <p class="hint">R=X, G=Y, B=Z. Same output as <code>infer.py</code>.</p>
+  </section>
+
+  <!-- 3D -->
+  <section class="panel">
+    <h2>3 · 3D model</h2>
+    <div class="canvas-wrap"><canvas id="view3d"></canvas></div>
+    <div class="row">
+      <button id="resetView">Reset view</button>
+      <a class="dl" id="dlObj" hidden download="dildogen.obj">↓ Mesh (.obj)</a>
+    </div>
+    <p class="hint">Drag to orbit · scroll to zoom. Mesh built from the XYZ grid.</p>
+  </section>
+</main>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
